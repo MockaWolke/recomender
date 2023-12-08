@@ -31,6 +31,7 @@
                         </p>
                     </div>
                     
+                    {% if m.tags %}
                     <h5>Tags</h5>
                     <div class="tags">
                         <p style="padding-left: 15px;">
@@ -39,7 +40,8 @@
                             {% endfor %}
                         </p>
                     </div>
-        
+                    {% endif %}
+                
                    
                     <!-- Rating Stars -->
                     <div class="movie-footer">
