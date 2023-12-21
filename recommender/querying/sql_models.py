@@ -1,3 +1,4 @@
+# sql_models.py
 from flask_sqlalchemy import SQLAlchemy
 from flask_user import UserMixin
 
@@ -26,7 +27,36 @@ class User(db.Model, UserMixin):
     last_name = db.Column(
         db.String(100, collation="NOCASE"), nullable=False, server_default=""
     )
-    # tags = db.relationship("Tags", backref="user", lazy=True, uselist=True)
+    ratings = db.relationship("Rating", backref="user", lazy="joined")
+
+    recommendations = db.relationship("Recommendation", backref="user", lazy="joined")
+    recommendations_ready = db.Column(
+        "recommendations_ready", db.Boolean(), nullable=False, server_default="0"
+    )
+
+
+class OldUser(db.Model, UserMixin):
+    __tablename__ = "old-users"
+    id = db.Column(db.Integer, primary_key=True)
+    ratings = db.relationship("Rating", backref="old-user", lazy="joined")
+
+
+class Recommendation(db.Model):
+    __tablename__ = "recommendations"
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
+    movie_id = db.Column(db.Integer, db.ForeignKey("movies.id"))
+    score = db.Column(db.Float)
+    movie = db.relationship("Movie", back_populates="recommendations", uselist=False)
+
+
+class Rating(db.Model):
+    __tablename__ = "ratings"
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
+    old_user_id = db.Column(db.Integer, db.ForeignKey("old-users.id"), nullable=True)
+    movie_id = db.Column(db.Integer, db.ForeignKey("movies.id"))
+    value = db.Column(db.Float)
 
 
 class Movie(db.Model):
@@ -54,6 +84,10 @@ class Movie(db.Model):
         "IMDbData",
         back_populates="movie",
         uselist=False,
+    )
+    ratings = db.relationship("Rating", backref="movie", lazy="joined")
+    recommendations = db.relationship(
+        "Recommendation", back_populates="movie", uselist=True
     )
 
 
@@ -92,10 +126,26 @@ class Director(db.Model):
     name = db.Column(db.String(255), unique=True)
 
 
+recommendations_movie = db.Table(
+    "recommendations_movie",
+    db.Column("movie_id", db.Integer, db.ForeignKey("movies.id"), primary_key=True),
+    db.Column(
+        "recommendation_id",
+        db.Integer,
+        db.ForeignKey("recommendations.id"),
+        primary_key=True,
+    ),
+    db.Index("idx_recommendations_movie_movie", "movie_id"),
+    db.Index("idx_recommendations_movie_recommendation", "recommendation_id"),
+)
+
+
 movie_actors = db.Table(
     "movie_actors",
     db.Column("movie_id", db.Integer, db.ForeignKey("movies.id"), primary_key=True),
     db.Column("actor_id", db.Integer, db.ForeignKey("actors.id"), primary_key=True),
+    db.Index("idx_movie_actors_movie", "movie_id"),
+    db.Index("idx_movie_actors_actor", "actor_id"),
 )
 
 movie_directors = db.Table(
@@ -104,4 +154,6 @@ movie_directors = db.Table(
     db.Column(
         "director_id", db.Integer, db.ForeignKey("directors.id"), primary_key=True
     ),
+    db.Index("idx_movie_directors_movie", "movie_id"),
+    db.Index("idx_movie_directors_director", "director_id"),
 )

@@ -92,7 +92,7 @@
 }
 
 .star-rating:hover, .star-rating:focus {
-    color: #af8300; 
+    color: #ff8f57; 
     text-decoration: none;
     /* Slightly darker color for the hover effect */
 }

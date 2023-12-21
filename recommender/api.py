@@ -1,45 +1,32 @@
-from flask import Flask, render_template
-from flask_user import login_required, UserManager
-
-from recommender.sql_models import db, User, Movie
-from recommender.fill_db import check_and_read_data
-from dotenv import load_dotenv
+# api.app
+from recommender import REPO_PATH, MIN_SCORE, MAX_RECOMENDATIOSN
 from loguru import logger
-from recommender import REPO_PATH
-from recommender.chroma import CHROMA_Manager
-import os
 
-os.chdir(REPO_PATH)
+from flask import render_template, request, jsonify
+from flask_user import login_required
+from flask_login import current_user
+from recommender.querying.sql_models import (
+    Movie,
+    Rating,
+    User,
+    Recommendation,
+    recommendations_movie,
+)
+from recommender.init_data.fill_db import check_and_read_data
+from loguru import logger
+from recommender.querying.querying_and_validation import (
+    validate_ratings,
+    get_unique_genres,
+    check_if_vadlid_ratings,
+    validate_selected_genres,
+)
 
+from recommender.apps import app, chroma_manager, db
+from recommender.celery_queue.worker import generate_recommendations
 
-# Class-based application configuration
-class ConfigClass(object):
-    """Flask application config"""
-
-    # Flask settings
-    SECRET_KEY = "This is an INSECURE secret!! DO NOT use this in production!!"
-
-    # Flask-SQLAlchemy settings
-    SQLALCHEMY_DATABASE_URI = (
-        f"sqlite:///{REPO_PATH}/movie_recommender.sqlite"  # File-based SQL database
-    )
-    SQLALCHEMY_TRACK_MODIFICATIONS = False  # Avoids SQLAlchemy warning
-
-    # Flask-User settings
-    USER_APP_NAME = "Movie Recommender"  # Shown in and email templates and page footers
-    USER_ENABLE_EMAIL = False  # Disable email authentication
-    USER_ENABLE_USERNAME = True  # Enable username authentication
-    USER_REQUIRE_RETYPE_PASSWORD = True  # Simplify register form
-
-
-# Create Flask app
-app = Flask(__name__)
-app.config.from_object(__name__ + ".ConfigClass")  # configuration
-app.app_context().push()  # create an app context before initializing db
-db.init_app(app)  # initialize database
-db.create_all()  # create database if necessary
-user_manager = UserManager(app, db, User)  # initialize Flask-User management
-chroma_manager = CHROMA_Manager.get_instance()
+EXAMPLE_MOVIES = Movie.query.limit(5).all()
+UNIQUE_GENRES = get_unique_genres(db)
+UNIQUE_GENRES_SET = set(UNIQUE_GENRES.values())
 
 
 @app.cli.command("initdb")
@@ -76,22 +63,107 @@ def home_page():
 # The Members page is only accessible to authenticated users via the @login_required decorator
 @app.route("/movies")
 @login_required  # User must be authenticated
-def movies_page():
-    # String-based templates
+def rating_page():
+    return render_template("movies.html", movies=EXAMPLE_MOVIES, max_tags=5)
 
-    # first 10 movies
-    movies = Movie.query.limit(10).all()
 
-    # only Romance movies
-    # movies = Movie.query.filter(Movie.genres.any(MovieGenre.genre == 'Romance')).limit(10).all()
+@app.post("/save_ratings")
+@login_required  # User must be authenticated
+def save_ratings():
+    data = request.json  # Get JSON data from the request
+    ratings_values = data.get("ratings")
 
-    # only Romance AND Horror movies
-    # movies = Movie.query\
-    #     .filter(Movie.genres.any(MovieGenre.genre == 'Romance')) \
-    #     .filter(Movie.genres.any(MovieGenre.genre == 'Horror')) \
-    #     .limit(10).all()
+    if not ratings_values:
+        return jsonify({"error": "No ratings provided"}), 400
 
-    return render_template("movies.html", movies=movies, max_tags=5)
+    try:
+        ratings = validate_ratings(db, ratings_values)
+    except TypeError:
+        return jsonify({"error": "False ratings provided"}), 400
+
+    Rating.query.filter_by(user_id=current_user.id).delete()
+    db.session.commit()  # Commit the deletion
+
+    for movie_id, value in ratings.items():
+        # Create a new Rating object
+        new_rating = Rating(
+            user_id=current_user.id,
+            movie_id=movie_id,  # Ensure this corresponds with your movies
+            value=float(value),
+        )
+        db.session.add(new_rating)
+    user = db.session.query(User).get(current_user.id)
+    user.recommendations_ready = False
+    db.session.commit()
+
+    job_id = generate_recommendations.delay(current_user.id).id
+    logger.info(f"Queue started at {job_id}")
+
+    return jsonify(
+        {"message": "Ratings saved successfully", "recommendation_job_id": job_id}
+    )
+
+
+@app.get("/recommendation_status")
+def task_result() -> dict[str, object]:
+    user = db.session.query(User).get(current_user.id)
+    if user is None:
+        return jsonify({"ok": False, "error": "User not found"}), 404
+
+    return jsonify({"ready": user.recommendations_ready, "ok": True})
+
+
+@app.route("/recommendations")
+@login_required  # Use
+def recommend_page():
+    if not check_if_vadlid_ratings(db, current_user.id):
+        return render_template("missing_recommendations.html")
+
+    try:
+        selected_genres = validate_selected_genres(request.args, UNIQUE_GENRES)
+
+    except:
+        logger.exception("s")
+        return "False Args"
+    logger.info(f"Selected genres {selected_genres}")
+
+    user = db.session.query(User).get(current_user.id)
+
+    if user.recommendations_ready == False:
+        return render_template("recommendations_loading.html")
+
+    recommendations = Recommendation.query.filter(
+        Recommendation.user_id == current_user.id
+    ).all()
+
+    def in_selected_movies(movie: Movie):
+        if selected_genres is None:
+            return True
+
+        genres = set(i.genre for i in movie.genres.all())
+        return selected_genres.issubset(genres)
+
+    movies_and_scores = []
+
+    for recommendation in recommendations:
+        movie = recommendation.movie
+        score = recommendation.score
+
+        if score > MIN_SCORE and in_selected_movies(movie):
+            movies_and_scores.append((movie, f"{score:.2f}"))
+
+    movies_and_scores = movies_and_scores[:MAX_RECOMENDATIOSN]
+
+    return render_template(
+        f"recommendations.html",
+        movies_and_scores=movies_and_scores,
+        max_tags=5,
+        unique_genres=UNIQUE_GENRES,
+        selected_genres=selected_genres
+        if selected_genres is not None
+        else UNIQUE_GENRES_SET,
+        selected_all=request.args.get("genres") is None,
+    )
 
 
 # Start development web server

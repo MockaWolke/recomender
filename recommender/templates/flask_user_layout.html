@@ -9,9 +9,23 @@
 
     <!-- Bootstrap -->
     <link href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css" rel="stylesheet">
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- In-lining styles to avoid needing a separate .css file -->
     <style>
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+    
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
         body {
             font-family: Arial, sans-serif; /* Adjust as per your extended template */
         }
@@ -31,7 +45,7 @@
         }
 
         /* Custom styles from your style.css */
-        .movie-card, .header-div, .footer-div {
+        .some-card, .header-div, .footer-div {
             border: 1px solid #ffffff;
             border-radius: 8px;
             padding: 20px;
@@ -75,7 +89,7 @@
 
 <body>
     {% block body %}
-    <div id="header-div" class="clearfix with-margins movie-card">
+    <div id="header-div" class="clearfix with-margins some-card">
         <div class="pull-left"><a href="/"><h1 class="no-margins">{{ user_manager.USER_APP_NAME }}</h1></a></div>
         <div class="pull-right">
             {% if call_or_get(current_user.is_authenticated) %}
@@ -124,11 +138,12 @@
 
 
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
-    <script src="//code.jquery.com/jquery-1.11.0.min.js"></script>
-    <!-- Bootstrap -->
-    <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+    <!-- <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-    {# *** Allow sub-templates to insert extra html to the bottom of the body *** #}
+    <!-- Bootstrap -->
+    <!-- <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script> -->
+
+    {# *** Allow sub-templates to insert extra html to the bottom of the body *** #} -->
     {% block extra_js %}{% endblock %}
 
   </body>

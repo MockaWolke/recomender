@@ -1,0 +1,18 @@
+    <!-- movies.html -->
+    {% extends "flask_user_layout.html" %}
+    {% block content %}
+
+    
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    
+
+    <div class="container">
+
+
+    <h2>Missing Ratings</h2>
+
+
+    <p>You first need to rate movies <a href={{ url_for('rating_page') }}>here</a> such that we can give you recommedations  (:</p>
+
+    
+{% endblock %}

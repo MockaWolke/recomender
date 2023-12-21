@@ -1,0 +1,118 @@
+    <!-- recommendations.html -->
+    {% extends "flask_user_layout.html" %}
+    {% block content %}
+
+        <!-- Latest compiled and minified CSS -->
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.1/css/bootstrap-select.min.css">
+
+        <!-- Latest compiled and minified JavaScript -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.1/js/bootstrap-select.min.js"></script>
+            
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    
+
+    <div class="container">
+        
+        
+        
+        
+        
+        
+        {% if  movies_and_scores != None and movies_and_scores|length > 0 %}
+        <h2>Movies you may like</h2>
+        <form id="genre-form"  >
+            <select id="genre-select" name="genres" class="selectpicker" multiple data-live-search="true" data-selected-text-format="count > 3" data-actions-box="true">
+                {% for clean_genre_name, genre in unique_genres.items() %}
+                    <option value="{{ clean_genre_name }}" {% if genre in selected_genres and not selected_all %}selected{% endif %}>{{ genre }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="btn" style="background-color: #007bff; color: white;">Filter</button>
+
+        </form>
+        
+
+        {% for m, score in movies_and_scores %}
+        <div class="movie-card" movie_id="{{ m.id }}">
+            <div class="movie-header">
+                <div class="movie-title-section">
+                    <h3>{{ m.title }} - Score: <span style="color:rgb(255,0,0);">{{score}}</span> </h3>
+                    <a href="{{ m.imdbId_link }}" target="_blank" class="btn-imdb">Visit IMDb Page</a>
+                </div>
+                <div class="movie-body">
+                    <p style="padding-top: 15px;"></p>
+                    <h5>Genres</h5>
+                    <div class="genres">
+                        
+                        <p style="padding-left: 15px;">
+                        {% for g in m.genres %}
+                            <span class="badge badge-secondary">{{ g.genre }}</span>
+                        {% endfor %}
+                        </p>
+                    </div>
+                    {% if  m.Tags  %}
+                    <h5>Tags</h5>
+                    <div class="tags">
+                        <p style="padding-left: 15px;">
+                            {% for tag in m.tags[:max_tags] %}
+                                <span class="badge badge-success">{{ tag.tag }}</span>
+                            {% endfor %}
+                        </p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <h2>Oh no, we cant recommend you something ):</h2>
+        <form action="{{ url_for('recommend_page') }}" method="get">
+            <select id="genre-select" name="genres" class="selectpicker" multiple data-live-search="true" data-selected-text-format="count > 3" data-actions-box="true">
+                {% for clean_genre_name, genre in unique_genres.items() %}
+                    <option value="{{ clean_genre_name }}" {% if genre in selected_genres and not selected_all %}selected{% endif %}>{{ genre }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="btn" style="background-color: #007bff; color: white;">Filter</button>
+
+        </form>
+        {% endif %}
+
+    </div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+
+<!-- Load Bootstrap's JavaScript -->
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+
+<!-- Load Bootstrap Select's JavaScript -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.1/js/bootstrap-select.min.js"></script>
+
+<script>
+     $(document).ready(function () {
+        $('.selectpicker').selectpicker();
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('genre-form').addEventListener('submit', function(event) {
+            event.preventDefault();  // Prevent default form submission
+
+            var selectedGenres = $('#genre-select').val();
+            var genreString = selectedGenres.join(',');
+            if (genreString.length==0){
+                console.log("not having ann args")
+                window.location.href = '{{ url_for("recommend_page") }}' ;
+            }
+            var queryString = '?genres=' + encodeURIComponent(genreString);
+            
+            console.log(selectedGenres);
+            console.log(genreString);
+            console.log(queryString);
+            
+        });
+    });
+
+</script>
+
+    
+{% endblock %}

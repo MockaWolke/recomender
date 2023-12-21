@@ -5,6 +5,11 @@
     
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     
+    <script type="text/javascript">
+        var submissionUrl = "{{ url_for('save_ratings') }}";
+        const len_movies = "{{'0' if movies == None else movies|length}}"
+        const nextpage = "{{ url_for('recommend_page') }}";
+    </script>
     
 
 
@@ -13,11 +18,11 @@
         <h2>Movies</h2>
 
         {% for m in movies %}
-        <div class="movie-card">
+        <div class="movie-card" movie_id="{{ m.id }}">
             <div class="movie-header">
                 <div class="movie-title-section">
                     <h3>{{ m.title }}</h3>
-                    <a href="{{ m.links.imdbId_link }}" target="_blank" class="btn-imdb">Visit IMDb Page</a>
+                    <a href="{{ m.imdbId_link }}" target="_blank" class="btn-imdb">Visit IMDb Page</a>
                 </div>
                 <div class="movie-body">
                     <p style="padding-top: 15px;"></p>
@@ -31,7 +36,7 @@
                         </p>
                     </div>
                     
-                    {% if m.tags %}
+                    {% if  m.Tags%}
                     <h5>Tags</h5>
                     <div class="tags">
                         <p style="padding-left: 15px;">
@@ -46,12 +51,13 @@
                     <!-- Rating Stars -->
                     <div class="movie-footer">
                         <h5>Rate:</h5>
-                        <a href="#" class="star-rating" data-rate="1">★</a>
-                        <a href="#" class="star-rating" data-rate="2">★</a>
-                        <a href="#" class="star-rating" data-rate="3">★</a>
-                        <a href="#" class="star-rating" data-rate="4">★</a>
-                        <a href="#" class="star-rating" data-rate="5">★</a>
-                        
+                        <div class="rating-container">
+                            <span class="star-rating" data-rate="1">★</span>
+                            <span class="star-rating" data-rate="2">★</span>
+                            <span class="star-rating" data-rate="3">★</span>
+                            <span class="star-rating" data-rate="4">★</span>
+                            <span class="star-rating" data-rate="5">★</span>
+                        </div>
                     </div>
 
 
@@ -59,5 +65,97 @@
             </div>
         </div>
         {% endfor %}
+        <button id="submit-ratings" class="btn-imdb" style="font-size: larger;opacity: 0.5;" >Submit Ratings</button>
+        <p id="warning-message" style="color: red; display: none;">Please rate all movies before submitting.</p>
     </div>
-    {% endblock %}
+    
+    <script>
+    const movieCards = document.querySelectorAll('.movie-card');
+    console.log("n_movie_cards", movieCards.length)
+    console.log("n_given_mocies", len_movies)
+let ratings = {};
+
+movieCards.forEach(card => {
+        // Extract movie id from the movie-card div
+        const movieId = card.getAttribute('movie_id');
+        
+        // Initialize the ratings for each movie with a null value
+        ratings[movieId] = null;
+
+    card.querySelectorAll('.star-rating').forEach(star => {
+        star.addEventListener('click', (e) => {
+            e.preventDefault();
+            ratings[movieId] = e.target.dataset.rate;
+            highlightRating(card, e.target.dataset.rate);
+            document.getElementById('warning-message').style.display = 'none';
+            checkIfAllRated();
+        });
+    });
+});
+
+function highlightRating(card, rate) {
+    const stars = card.querySelectorAll('.star-rating');
+    stars.forEach(star => {
+        star.style.opacity = star.dataset.rate == rate ? '1.0' : '0.5';
+        if (star.dataset.rate <= rate) {
+            star.classList.add('selected');
+            star.style.color = '#ff8f57'; // Slightly darker color for the selected star
+        } else {
+            star.classList.remove('selected');
+            star.style.color = '#ffc107'; // Original star color
+        }
+    });
+}
+
+function checkIfAllRated() {
+    console.log("check")
+    const allRated = Object.values(ratings).every(rating => rating !== null);
+
+    
+    const submitButton = document.getElementById('submit-ratings');
+    submitButton.style.opacity = allRated ? '1.0' : '0.5';
+}
+
+document.getElementById('submit-ratings').addEventListener('click', () => {
+    console.log("pressed")
+
+    var values = Object.values(ratings)
+    const allRated = values.every(rating => rating !== null);
+
+    console.log(Object.values(ratings))
+    console.log(len_movies)
+    console.log(values.length)
+    if (!allRated ) {
+        document.getElementById('warning-message').style.display = 'block';
+    } else {
+        fetch(submissionUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ ratings: ratings }),
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Success:', data);
+            // Redirect or handle response data here
+
+            document.cookie = 'recommendation_job_id='+data['recommendation_job_id'];
+
+            window.location.href = nextpage;
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+            // Handle errors here, such as by displaying a message to the user
+        });
+    }
+});
+
+
+</script>
+{% endblock %}

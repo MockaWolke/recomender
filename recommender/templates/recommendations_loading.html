@@ -1,0 +1,64 @@
+<!-- recommendations.html -->
+{% extends "flask_user_layout.html" %}
+{% block content %}
+
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.1/css/bootstrap-select.min.css">
+
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.1/js/bootstrap-select.min.js"></script>
+        
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<script type="text/javascript">
+    const nextpage = "{{ url_for('recommend_page') }}";
+</script>
+
+
+
+
+<div class="container">
+    
+    
+    
+    
+    
+    
+    <h2>Sorry, hang on a bit. We are finding what you could like (:</h2>
+    
+    Loading recommendations...
+    <div class="spinner"></div>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+    $(document).ready(function() {
+        function checkRecommendationsReady() {
+            $.ajax({
+                url: '/recommendation_status',
+                type: 'GET',
+                success: function(response) {
+
+                    console.log(response)
+                    if (!response.ok) {
+                        window.alert(response.error);
+                    }
+                    if (response.ready) {
+                        window.location.href = nextpage;
+                    } else {
+                        console.log("waiting more")
+                        setTimeout(checkRecommendationsReady, 500); 
+                    }
+                },
+                error: function() {
+                    console.log('Error checking recommendation status');
+                    // Handle error
+                }
+            });
+        }
+    
+        
+    checkRecommendationsReady();
+    });
+</script>
+
+    
+{% endblock %}
