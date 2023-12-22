@@ -6,8 +6,10 @@ from typing import List, Set, Tuple, Dict
 
 
 class UserBasedRecommender:
-    default_vec_val = 3
-    closest_relevant_users = 5
+    weights = {
+        "default_vec_val": 3,
+        "closest_relevant_users": 5,
+    }
 
     def __init__(self, db, distance_metric: callable = l2) -> None:
         self.db = db
@@ -38,7 +40,7 @@ class UserBasedRecommender:
         }
         return np.array(
             [
-                normalize_score(rated_movies.get(i.id, self.default_vec_val))
+                normalize_score(rated_movies.get(i.id, self.weights["default_vec_val"]))
                 for i in sorted_movies_keys
             ]
         )
@@ -93,7 +95,7 @@ class UserBasedRecommender:
 
         recommendations = defaultdict(lambda: 0)
 
-        relevant_users = user_ids[best[: self.closest_relevant_users]]
+        relevant_users = user_ids[best[: self.weights["default_vec_val"]]]
 
         for user_id in relevant_users:
             user = self.db.session.get(OldUser, int(user_id))
