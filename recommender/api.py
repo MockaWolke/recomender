@@ -44,7 +44,6 @@ UNIQUE_GENRES_SET = set(UNIQUE_GENRES.values())
 
 user_manager = UserManager(app, db, User)  # initialize Flask-User management
 chroma_manager = CHROMA_Manager.get_instance()
-chroma_manager.cache_embeddings()
 BackgroundTaskQueue.get_instance(timeout=Back_Ground_Timeout)
 assert BackgroundTaskQueue.get_instance().timeout == Back_Ground_Timeout
 

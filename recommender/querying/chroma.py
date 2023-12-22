@@ -39,8 +39,6 @@ class CHROMA_Manager:
         )
         self.batchsize = batchsize
 
-        self.embeddings: Dict[str, List[int]] = {}
-
     def get_set_movies(self):
         return set(self.collection.get()["ids"])
 
@@ -74,26 +72,18 @@ class CHROMA_Manager:
             documents = [i.imdb_data.summary for i in items]
             self.collection.add(ids=ids, documents=documents)
 
-        self.cache_embeddings()
-
-    def cache_embeddings(self):
-        res = self.collection.get(include=["embeddings"])
-
-        for name, val in zip(res["ids"], res["embeddings"]):
-            self.embeddings[name] = val
-
     def query(
         self, movie_id: int, top_k
     ) -> Tuple[List[int], List[int],]:
         movie_id = str(movie_id)
 
-        if movie_id not in self.embeddings:
+        em = self.collection.get(ids=movie_id, include=["embeddings"])["embeddings"]
+
+        if len(em) == 0:
             logger.info(f"No embedding for {movie_id}")
             return [], []
 
-        em = self.embeddings[movie_id]
-
-        res = self.collection.query(query_embeddings=[em], n_results=top_k + 1)
+        res = self.collection.query(query_embeddings=em, n_results=top_k + 1)
         ids = [int(c) for c in res["ids"][0][1:]]
 
         distances = res["distances"][0][1:]
