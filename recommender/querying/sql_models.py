@@ -126,20 +126,6 @@ class Director(db.Model):
     name = db.Column(db.String(255), unique=True)
 
 
-recommendations_movie = db.Table(
-    "recommendations_movie",
-    db.Column("movie_id", db.Integer, db.ForeignKey("movies.id"), primary_key=True),
-    db.Column(
-        "recommendation_id",
-        db.Integer,
-        db.ForeignKey("recommendations.id"),
-        primary_key=True,
-    ),
-    db.Index("idx_recommendations_movie_movie", "movie_id"),
-    db.Index("idx_recommendations_movie_recommendation", "recommendation_id"),
-)
-
-
 movie_actors = db.Table(
     "movie_actors",
     db.Column("movie_id", db.Integer, db.ForeignKey("movies.id"), primary_key=True),

@@ -18,7 +18,7 @@
         
         
         
-        {% if  movies_and_scores != None and movies_and_scores|length > 0 %}
+        {% if  response_data != None and response_data|length > 0 %}
         <h2>Movies you may like</h2>
         <form id="genre-form"  >
             <select id="genre-select" name="genres" class="selectpicker" multiple data-live-search="true" data-selected-text-format="count > 3" data-actions-box="true">
@@ -31,12 +31,12 @@
         </form>
         
 
-        {% for m, score in movies_and_scores %}
-        <div class="movie-card" movie_id="{{ m.id }}">
+        {% for reco in response_data %}
+        <div class="movie-card" movie_id="{{ reco.id }}">
             <div class="movie-header">
                 <div class="movie-title-section">
-                    <h3>{{ m.title }} - Score: <span style="color:rgb(255,0,0);">{{score}}</span> </h3>
-                    <a href="{{ m.imdbId_link }}" target="_blank" class="btn-imdb">Visit IMDb Page</a>
+                    <h3>{{ reco.title }} - Score: <span style="color:rgb(255,0,0);">{{reco.score}}</span> </h3>
+                    <a href="{{ reco.imdb_link }}" target="_blank" class="btn-imdb">Visit IMDb Page</a>
                 </div>
                 <div class="movie-body">
                     <p style="padding-top: 15px;"></p>
@@ -44,17 +44,17 @@
                     <div class="genres">
                         
                         <p style="padding-left: 15px;">
-                        {% for g in m.genres %}
-                            <span class="badge badge-secondary">{{ g.genre }}</span>
+                        {% for g in reco.genres %}
+                            <span class="badge badge-secondary">{{ g }}</span>
                         {% endfor %}
                         </p>
                     </div>
-                    {% if  m.Tags  %}
+                    {% if  reco.tags  %}
                     <h5>Tags</h5>
                     <div class="tags">
                         <p style="padding-left: 15px;">
-                            {% for tag in m.tags[:max_tags] %}
-                                <span class="badge badge-success">{{ tag.tag }}</span>
+                            {% for tag in reco.tags[:max_tags] %}
+                                <span class="badge badge-success">{{ tag }}</span>
                             {% endfor %}
                         </p>
                     </div>
@@ -104,7 +104,7 @@
                 window.location.href = '{{ url_for("recommend_page") }}' ;
             }
             var queryString = '?genres=' + encodeURIComponent(genreString);
-            
+            window.location.href = queryString;
             console.log(selectedGenres);
             console.log(genreString);
             console.log(queryString);

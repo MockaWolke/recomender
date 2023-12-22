@@ -1,16 +1,21 @@
 # api.app
-from recommender import REPO_PATH, MIN_SCORE, MAX_RECOMENDATIOSN
-from loguru import logger
-
+from recommender import (
+    REPO_PATH,
+    MIN_SCORE,
+    MAX_RECOMENDATIOSN,
+    Back_Ground_Timeout,
+    RECOMMENDATIONS_CACHE_TIME,
+    RECOMMENDATIONS_CACHED_N_USERS,
+)
 from flask import render_template, request, jsonify
 from flask_user import login_required
 from flask_login import current_user
+from collections import namedtuple
 from recommender.querying.sql_models import (
     Movie,
     Rating,
     User,
     Recommendation,
-    recommendations_movie,
 )
 from recommender.init_data.fill_db import check_and_read_data
 from loguru import logger
@@ -21,12 +26,42 @@ from recommender.querying.querying_and_validation import (
     validate_selected_genres,
 )
 
-from recommender.apps import app, chroma_manager, db
-from recommender.celery_queue.worker import generate_recommendations
+from recommender.apps import create_app_slimm
+from recommender.querying import CHROMA_Manager
+from loguru import logger
+from recommender.python_queue import BackgroundTaskQueue
+from flask_user import UserManager
+from cachetools import TTLCache
+from dataclasses import dataclass
+
+logger.add(REPO_PATH / "api.log", rotation="5mb")
+
+app, db = create_app_slimm()
 
 EXAMPLE_MOVIES = Movie.query.limit(5).all()
 UNIQUE_GENRES = get_unique_genres(db)
 UNIQUE_GENRES_SET = set(UNIQUE_GENRES.values())
+
+user_manager = UserManager(app, db, User)  # initialize Flask-User management
+chroma_manager = CHROMA_Manager.get_instance()
+chroma_manager.cache_embeddings()
+BackgroundTaskQueue.get_instance(timeout=Back_Ground_Timeout)
+assert BackgroundTaskQueue.get_instance().timeout == Back_Ground_Timeout
+
+recommendations_cache = TTLCache(
+    RECOMMENDATIONS_CACHED_N_USERS, RECOMMENDATIONS_CACHE_TIME
+)
+
+
+@dataclass
+class CachedRecommendation:
+    title: str
+    genres: list[str]
+    tags: list[str]
+    score: float
+    imdb_link: str
+    rounded_score: str
+    id: int
 
 
 @app.cli.command("initdb")
@@ -96,7 +131,14 @@ def save_ratings():
     user.recommendations_ready = False
     db.session.commit()
 
-    job_id = generate_recommendations.delay(current_user.id).id
+    background_task_queue = BackgroundTaskQueue.get_instance()
+    print("timeout", background_task_queue.timeout)
+
+    job_id = background_task_queue.add_task(user_id=current_user.id)
+
+    # clear chache
+    recommendations_cache.pop(current_user.id, None)
+
     logger.info(f"Queue started at {job_id}")
 
     return jsonify(
@@ -106,11 +148,19 @@ def save_ratings():
 
 @app.get("/recommendation_status")
 def task_result() -> dict[str, object]:
-    user = db.session.query(User).get(current_user.id)
-    if user is None:
-        return jsonify({"ok": False, "error": "User not found"}), 404
+    job_id = request.cookies.get("recommendation_job_id")
 
-    return jsonify({"ready": user.recommendations_ready, "ok": True})
+    status = BackgroundTaskQueue.get_instance().task_status.get(job_id)
+
+    if status is None:
+        return jsonify({"ok": False, "error": "Job not found"})
+
+    if status == "error":
+        return jsonify(
+            {"ok": False, "error": "Oh now, we have had an error in the background ):"}
+        )
+
+    return jsonify({"ready": status == "success", "ok": True})
 
 
 @app.route("/recommendations")
@@ -132,31 +182,53 @@ def recommend_page():
     if user.recommendations_ready == False:
         return render_template("recommendations_loading.html")
 
-    recommendations = Recommendation.query.filter(
-        Recommendation.user_id == current_user.id
-    ).all()
+    if current_user.id in recommendations_cache:
+        logger.debug("Loading from Cache")
+        cached_recommendations: list[CachedRecommendation] = recommendations_cache[
+            current_user.id
+        ]
+        logger.debug("Loaded")
 
-    def in_selected_movies(movie: Movie):
-        if selected_genres is None:
-            return True
+    else:
+        recommendations = Recommendation.query.filter(
+            Recommendation.user_id == current_user.id
+        ).all()
 
-        genres = set(i.genre for i in movie.genres.all())
-        return selected_genres.issubset(genres)
+        cached_recommendations: list[CachedRecommendation] = []
 
-    movies_and_scores = []
+        for recommendation in recommendations:
+            score = recommendation.score
 
-    for recommendation in recommendations:
-        movie = recommendation.movie
-        score = recommendation.score
+            if score < MIN_SCORE:  # keeps cache small
+                continue
 
-        if score > MIN_SCORE and in_selected_movies(movie):
-            movies_and_scores.append((movie, f"{score:.2f}"))
+            movie = recommendation.movie
+            reco = CachedRecommendation(
+                title=movie.title,
+                score=score,
+                rounded_score=f"{score:.2f}",
+                genres=[i.genre for i in movie.genres],
+                tags=[i.tag for i in movie.tags],
+                imdb_link=movie.imdbId_link,
+                id=movie.id,
+            )
 
-    movies_and_scores = movies_and_scores[:MAX_RECOMENDATIOSN]
+            cached_recommendations.append(reco)
+
+        # add to chache
+        recommendations_cache[current_user.id] = cached_recommendations
+
+    response_data = []
+
+    for reco in cached_recommendations:
+        if selected_genres is None or selected_genres.issubset(reco.genres):
+            response_data.append(reco)
+
+    response_data = response_data[:MAX_RECOMENDATIOSN]
 
     return render_template(
         f"recommendations.html",
-        movies_and_scores=movies_and_scores,
+        response_data=response_data,
         max_tags=5,
         unique_genres=UNIQUE_GENRES,
         selected_genres=selected_genres

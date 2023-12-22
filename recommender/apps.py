@@ -1,14 +1,7 @@
 # apps.api
 from recommender import REPO_PATH
-from loguru import logger
-
-logger.add(REPO_PATH / "api.log", rotation="5mb")
-
 from flask import Flask
-from flask_user import UserManager
 from recommender.querying.sql_models import db, User
-from loguru import logger
-from recommender.querying.chroma import CHROMA_Manager
 import os
 import celery
 from celery import Celery
@@ -35,6 +28,17 @@ class ConfigClass(object):
     USER_REQUIRE_RETYPE_PASSWORD = True  # Simplify register form
 
 
+def create_app_slimm():
+    app = Flask(__name__)
+
+    app.config.from_object(__name__ + ".ConfigClass")  # configuration
+    app.app_context().push()  # create an app context before initializing db
+    db.init_app(app)  # initialize database
+    db.create_all()  # create database if necessary
+
+    return app, db
+
+
 def create_app():
     app = Flask(__name__)
 
@@ -46,7 +50,11 @@ def create_app():
     chroma_manager = CHROMA_Manager.get_instance()
     chroma_manager.cache_embeddings()
 
-    return app, chroma_manager, user_manager
+    return (
+        app,
+        chroma_manager,
+        user_manager,
+    )
 
 
 def create_celery(app=None):
@@ -66,5 +74,5 @@ def create_celery(app=None):
     return celery
 
 
-app, chroma_manager, user_manager = create_app()
-celery_app = create_celery(app)
+# app, chroma_manager, user_manager = create_app()
+# celery_app = create_celery(app)
