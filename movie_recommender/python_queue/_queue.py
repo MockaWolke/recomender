@@ -53,7 +53,7 @@ class BackgroundTaskQueue:
         process = Popen(
             [
                 sys.executable,
-                REPO_PATH / "recommender/python_queue/job.py",
+                REPO_PATH / "movie_recommender/python_queue/job.py",
                 str(user_id),
             ],
             stdout=PIPE,
