@@ -67,4 +67,5 @@ if __name__ == "__main__":
     logger.debug(f"Starting Database took {time.time() - start_time}")
 
     generate_recommendations(db, sys.argv[1])
+    logger.info("reached")
     sys.exit(0)
