@@ -2,7 +2,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 import os
 
-REPO_PATH = Path(__name__).parent.parent
+REPO_PATH = Path(__file__).parent.parent.absolute()
 
 assert load_dotenv(REPO_PATH / ".env"), f"Could not find .env at {REPO_PATH}"
 

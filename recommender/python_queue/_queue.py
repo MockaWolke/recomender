@@ -22,6 +22,7 @@ class BackgroundTaskQueue:
     def __init__(self, timeout=10) -> None:
         self.task_queue = queue.Queue()
         self.worker_thread = threading.Thread(target=self._worker)
+        self.running = True
         self.worker_thread.start()
         self.task_status = {}
         self.timeout = timeout
@@ -34,8 +35,14 @@ class BackgroundTaskQueue:
 
         return job_id
 
+    def shutdown(self):
+        self.running = False  # Signal the worker to stop
+        self.task_queue.put((None, None))  # Add a sentinel task to unblock the queue
+        self.worker_thread.join()
+
     def _worker(self):
-        while True:
+        main_thread = threading.main_thread()
+        while main_thread.is_alive() and self.running:
             job_id, user_id = self.task_queue.get()
             if user_id is None:
                 break

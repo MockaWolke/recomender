@@ -35,6 +35,8 @@ from cachetools import TTLCache
 from dataclasses import dataclass
 import json
 import os
+import time
+import datetime
 
 logger.add(REPO_PATH / "api.log", rotation="5mb")
 
@@ -53,6 +55,9 @@ user_manager = UserManager(app, db, User)  # initialize Flask-User management
 chroma_manager = CHROMA_Manager.get_instance()
 BackgroundTaskQueue.get_instance(timeout=Back_Ground_Timeout)
 assert BackgroundTaskQueue.get_instance().timeout == Back_Ground_Timeout
+
+logger.info(f"Starting API at {datetime.datetime.now()}")
+
 
 recommendations_cache = TTLCache(
     RECOMMENDATIONS_CACHED_N_USERS, RECOMMENDATIONS_CACHE_TIME
