@@ -183,7 +183,7 @@ def save_ratings():
 
 
 @app.get("/recommendation_status")
-def task_result() -> dict[str, object]:
+def recommendation_status() -> dict[str, object]:
     job_id = request.cookies.get("recommendation_job_id")
 
     status = BackgroundTaskQueue.get_instance().task_status.get(job_id)
