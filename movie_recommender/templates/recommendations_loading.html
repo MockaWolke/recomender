@@ -11,6 +11,8 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 <script type="text/javascript">
     const nextpage = "{{ url_for('recommend_page') }}";
+    const status_url = "{{ url_for('recommendation_status') }}";
+
 </script>
 
 
@@ -33,7 +35,7 @@
     $(document).ready(function() {
         function checkRecommendationsReady() {
             $.ajax({
-                url: '/recommendation_status',
+                url: status_url,
                 type: 'GET',
                 success: function(response) {
 
