@@ -33,12 +33,19 @@ from recommender.python_queue import BackgroundTaskQueue
 from flask_user import UserManager
 from cachetools import TTLCache
 from dataclasses import dataclass
+import json
+import os
 
 logger.add(REPO_PATH / "api.log", rotation="5mb")
 
 app, db = create_app_slimm()
 
-EXAMPLE_MOVIES = Movie.query.limit(5).all()
+# get example movies
+with open(REPO_PATH / "rating_movies.json") as f:
+    rating_movies = json.load(f)
+
+
+EXAMPLE_MOVIES = Movie.query.filter(Movie.title.in_(rating_movies)).all()
 UNIQUE_GENRES = get_unique_genres(db)
 UNIQUE_GENRES_SET = set(UNIQUE_GENRES.values())
 
@@ -53,14 +60,22 @@ recommendations_cache = TTLCache(
 
 
 @dataclass
-class CachedRecommendation:
+class MovieInfo:
     title: str
     genres: list[str]
     tags: list[str]
-    score: float
     imdb_link: str
-    rounded_score: str
     id: int
+    imdbid: str
+    score: float = 0
+    rounded_score: str = ""
+    image_path: str = ""
+
+    def __post_init__(self):
+        path = f"images/{self.imdbid}.jpg"
+
+        if os.path.exists(REPO_PATH / "recommender/static/" / path):
+            self.image_path = path
 
 
 @app.cli.command("initdb")
@@ -98,7 +113,19 @@ def home_page():
 @app.route("/movies")
 @login_required  # User must be authenticated
 def rating_page():
-    return render_template("movies.html", movies=EXAMPLE_MOVIES, max_tags=5)
+    movies = [
+        MovieInfo(
+            title=movie.title,
+            genres=[i.genre for i in movie.genres],
+            tags=[i.tag for i in movie.tags],
+            imdb_link=movie.imdbId_link,
+            id=movie.id,
+            imdbid=movie.imdb_id,
+        )
+        for movie in EXAMPLE_MOVIES
+    ]
+
+    return render_template("movies.html", movies=movies, max_tags=5)
 
 
 @app.post("/save_ratings")
@@ -183,9 +210,7 @@ def recommend_page():
 
     if current_user.id in recommendations_cache:
         logger.debug("Loading from Cache")
-        cached_recommendations: list[CachedRecommendation] = recommendations_cache[
-            current_user.id
-        ]
+        cached_recommendations: list[MovieInfo] = recommendations_cache[current_user.id]
         logger.debug("Loaded")
 
     else:
@@ -193,7 +218,7 @@ def recommend_page():
             Recommendation.user_id == current_user.id
         ).all()
 
-        cached_recommendations: list[CachedRecommendation] = []
+        cached_recommendations: list[MovieInfo] = []
 
         for recommendation in recommendations:
             score = recommendation.score
@@ -202,14 +227,15 @@ def recommend_page():
                 continue
 
             movie = recommendation.movie
-            reco = CachedRecommendation(
+            reco = MovieInfo(
                 title=movie.title,
                 score=score,
-                rounded_score=f"{score:.2f}",
+                rounded_score=f"{score*0.01:.2f}",
                 genres=[i.genre for i in movie.genres],
                 tags=[i.tag for i in movie.tags],
                 imdb_link=movie.imdbId_link,
                 id=movie.id,
+                imdbid=movie.imdb_id,
             )
 
             cached_recommendations.append(reco)

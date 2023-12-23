@@ -19,49 +19,59 @@
 
         {% for m in movies %}
         <div class="movie-card" movie_id="{{ m.id }}">
-            <div class="movie-header">
-                <div class="movie-title-section">
-                    <h3>{{ m.title }}</h3>
-                    <a href="{{ m.imdbId_link }}" target="_blank" class="btn-imdb">Visit IMDb Page</a>
-                </div>
-                <div class="movie-body">
-                    <p style="padding-top: 15px;"></p>
-                    <h5>Genres</h5>
-                    <div class="genres">
-                        
-                        <p style="padding-left: 15px;">
-                        {% for g in m.genres %}
-                            <span class="badge badge-secondary">{{ g.genre }}</span>
-                        {% endfor %}
-                        </p>
+            
+            
+            <div class="movie-content">    
+          
+                <div class="movie-header">
+                    <div class="movie-title-section">
+                        <h3>{{ m.title }}</h3>
                     </div>
-                    
-                    {% if  m.Tags%}
-                    <h5>Tags</h5>
-                    <div class="tags">
-                        <p style="padding-left: 15px;">
-                            {% for tag in m.tags[:max_tags] %}
-                                <span class="badge badge-success">{{ tag.tag }}</span>
+                    <div class="movie-body">
+                        <p style="padding-top: 15px;"></p>
+                        <h5>Genres</h5>
+                        <div class="genres">
+                            
+                            <p style="padding-left: 15px;">
+                            {% for g in m.genres %}
+                                <span class="badge badge-secondary">{{ g }}</span>
                             {% endfor %}
-                        </p>
-                    </div>
-                    {% endif %}
-                
-                   
-                    <!-- Rating Stars -->
-                    <div class="movie-footer">
-                        <h5>Rate:</h5>
-                        <div class="rating-container">
-                            <span class="star-rating" data-rate="1">★</span>
-                            <span class="star-rating" data-rate="2">★</span>
-                            <span class="star-rating" data-rate="3">★</span>
-                            <span class="star-rating" data-rate="4">★</span>
-                            <span class="star-rating" data-rate="5">★</span>
+                            </p>
+                        </div>
+                        
+                        {% if  m.Tags%}
+                        <h5>Tags</h5>
+                        <div class="tags">
+                            <p style="padding-left: 15px;">
+                                {% for tag in m.tags[:max_tags] %}
+                                    <span class="badge badge-success">{{ tag }}</span>
+                                {% endfor %}
+                            </p>
+                        </div>
+                        {% endif %}
+                    
+                    
+                        <!-- Rating Stars -->
+                        <div class="movie-footer">
+                            <h5>Rate:</h5>
+                            <div class="rating-container">
+                                <span class="star-rating" data-rate="1">★</span>
+                                <span class="star-rating" data-rate="2">★</span>
+                                <span class="star-rating" data-rate="3">★</span>
+                                <span class="star-rating" data-rate="4">★</span>
+                                <span class="star-rating" data-rate="5">★</span>
+                            </div>
                         </div>
                     </div>
-
-
                 </div>
+            </div>
+            <div class="movie-image-selection">
+                {% if m.image_path != "" %}
+                <img src="{{ url_for('static', filename=m.image_path) }}" alt="{{ m.title }}" class="movie-image">
+                {% endif %}
+            </div>
+            <div class="movie-link">
+                <a href="{{ url_for('static', filename=m.imdb_link) }}" target="_blank" class="btn-imdb">Visit IMDb Page</a>
             </div>
         </div>
         {% endfor %}

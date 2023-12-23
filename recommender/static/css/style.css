@@ -1,21 +1,60 @@
 /* style.css */
+
+#genre-form {
+    padding-bottom: 30px; /* Adjust the value as needed for desired spacing */
+}
+
+
+
+
+.movie-content {
+    justify-content: flex-start; /* Ensures text starts at the top */
+    align-items: flex-start; 
+    flex-basis: 60%;
+    /* flex-grow: 1; Allows the content section to grow and fill available space */
+}
 .movie-card {
+    display: flex;
     border: 1px solid #e3e3e3;
     border-radius: 8px;
-    padding: 20px;
-    margin-bottom: 20px;
+    padding: 20px; /* Equal padding on all sides */
+    margin-bottom: 20px; /* Space between cards */
+    justify-content: space-between;
+    /* align-items: center;  */
+    width: 90%;
+    margin-left: auto; /* This will center the card */
+    margin-right: auto; /* This will center the card */
+}
+
+.movie-link{
+    /* display: none; */
+    margin-top: 130px;
+    margin-left: 20px;#
+}
+
+.movie-image-section {
+    /* Adjust the size of the images and their containers */
+    flex-shrink: 0; /* Prevents the image section from shrinking */
+    padding-left: 20px; /* Space between content and image */
+}
+
+.movie-image {
+    max-width: 200px; /* Adjust the max width as needed */
+    height: auto;
+    border: 1px solid #ddd; /* Optional: adds a border around the image */
+    border-radius: 4px; /* Optional: rounds the corners of the border */
 }
 
 .movie-title-section {
     display: flex;
     align-items: center;
-    justify-content: space-between; /* This will push the title to the left and the button to the right */
-    width: 100%; /* Ensure the container takes up all available width */
+     width: 55%;/* Ensure the container takes up all available width */
 }
 
-.movie-header h3 {
-    margin-bottom: 0; /* Remove bottom margin */
-}
+/* .movie-header h3 {
+    margin-bottom: 0; 
+} 
+*/
 
 .btn-imdb {
     background-color: #0d6efd;

@@ -10,7 +10,9 @@
             
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     
-
+    <script type="text/javascript">
+        const thispage = "{{ url_for('recommend_page') }}";
+    </script>
     <div class="container">
         
         
@@ -33,37 +35,47 @@
 
         {% for reco in response_data %}
         <div class="movie-card" movie_id="{{ reco.id }}">
-            <div class="movie-header">
-                <div class="movie-title-section">
-                    <h3>{{ reco.title }} - Score: <span style="color:rgb(255,0,0);">{{reco.rounded_score}}</span> </h3>
-                    <a href="{{ reco.imdb_link }}" target="_blank" class="btn-imdb">Visit IMDb Page</a>
+            
+            <div class="movie-content">    
+                <div class="movie-header">
+                    <div class="movie-title-section">
+                        <h3>{{ reco.title }} - Score: <span style="color:rgb(255,0,0);">{{reco.rounded_score}}</span> </h3>
+                    </div>
                 </div>
-                <div class="movie-body">
-                    <p style="padding-top: 15px;"></p>
-                    <h5>Genres</h5>
-                    <div class="genres">
-                        
-                        <p style="padding-left: 15px;">
+                <p style="padding-top: 15px;"></p>
+                <h5>Genres</h5>
+                <div class="genres">
+                    
+                    <p style="padding-left: 15px;">
                         {% for g in reco.genres %}
-                            <span class="badge badge-secondary">{{ g }}</span>
+                        <span class="badge badge-secondary">{{ g }}</span>
                         {% endfor %}
-                        </p>
-                    </div>
-                    {% if  reco.tags  %}
-                    <h5>Tags</h5>
-                    <div class="tags">
-                        <p style="padding-left: 15px;">
-                            {% for tag in reco.tags[:max_tags] %}
-                                <span class="badge badge-success">{{ tag }}</span>
-                            {% endfor %}
-                        </p>
-                    </div>
-                    {% endif %}
+                    </p>
                 </div>
+                {% if  reco.tags  %}
+                <h5>Tags</h5>
+                <div class="tags">
+                    <p style="padding-left: 15px;">
+                        {% for tag in reco.tags[:max_tags] %}
+                        <span class="badge badge-success">{{ tag }}</span>
+                        {% endfor %}
+                    </p>
+                </div>
+                {% endif %}
             </div>
+            <div class="movie-image-selection">
+                {% if reco.image_path != "" %}
+                <img src="{{ url_for('static', filename=reco.image_path) }}" alt="{{ reco.title }}" class="movie-image">
+                {% endif %}
+            </div>
+            <div class="movie-link">
+                <a href="{{ url_for('static', filename=reco.imdb_link) }}" target="_blank" class="btn-imdb">Visit IMDb Page</a>
+            </div>
+
+
         </div>
         {% endfor %}
-        {% else %}
+    {% else %}
         <h2>Oh no, we cant recommend you something ):</h2>
         <form action="{{ url_for('recommend_page') }}" method="get">
             <select id="genre-select" name="genres" class="selectpicker" multiple data-live-search="true" data-selected-text-format="count > 3" data-actions-box="true">
@@ -101,13 +113,16 @@
             var genreString = selectedGenres.join(',');
             if (genreString.length==0){
                 console.log("not having ann args")
-                window.location.href = '{{ url_for("recommend_page") }}' ;
+                console.log(thispage);
+                window.location.href = thispage ;
+            }else{
+
+                var queryString = '?genres=' + encodeURIComponent(genreString);
+                window.location.href = queryString;
+                console.log(selectedGenres);
+                console.log(genreString);
+                console.log(queryString);
             }
-            var queryString = '?genres=' + encodeURIComponent(genreString);
-            window.location.href = queryString;
-            console.log(selectedGenres);
-            console.log(genreString);
-            console.log(queryString);
             
         });
     });

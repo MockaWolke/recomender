@@ -10,16 +10,16 @@ import time
 
 class CombinedRecommender:
     weights = {
-        "user": 1.2,
-        "content": 4,
+        "user": 31.696782262221,
+        "content": 15.069030305424,
         "user_weights": {
-            "default_vec_val": 3,
-            "closest_relevant_users": 5,
+            "default_vec_val": 2.5,
+            "closest_relevant_users": 4,
         },
         "content_weights": {
-            "directors": 1,
-            "actors": 0.2,
-            "plots": 1.2,
+            "directors": 9.0533755974,
+            "actors": 1.2301894300,
+            "plots": 2.406376778502906,
         },
     }
 

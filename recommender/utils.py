@@ -2,7 +2,7 @@ import numpy as np
 
 
 def normalize_score(val: float):
-    return (val - 3) ** 3
+    return (val - 2.5) ** 3
 
 
 def l2(a, b):

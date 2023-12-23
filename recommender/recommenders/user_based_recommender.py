@@ -95,7 +95,7 @@ class UserBasedRecommender:
 
         recommendations = defaultdict(lambda: 0)
 
-        relevant_users = user_ids[best[: self.weights["default_vec_val"]]]
+        relevant_users = user_ids[best[: self.weights["closest_relevant_users"]]]
 
         for user_id in relevant_users:
             user = self.db.session.get(OldUser, int(user_id))
