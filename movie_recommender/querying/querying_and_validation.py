@@ -1,6 +1,6 @@
 from loguru import logger
-from recommender.querying.sql_models import Movie, MovieGenre, Rating
-from recommender import MIN_RATING_LEN
+from movie_recommender.querying.sql_models import Movie, MovieGenre, Rating
+from movie_recommender import MIN_RATING_LEN
 from typing import List, Set, Tuple, Dict, Union
 from urllib.parse import unquote
 

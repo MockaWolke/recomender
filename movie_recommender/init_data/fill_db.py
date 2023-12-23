@@ -1,7 +1,7 @@
 import os
 import pandas as pd
 from sqlalchemy.exc import IntegrityError
-from recommender.querying.sql_models import (
+from movie_recommender.querying.sql_models import (
     Movie,
     MovieGenre,
     Tag,
@@ -19,7 +19,7 @@ from sqlalchemy.exc import IntegrityError
 import re
 import sqlalchemy
 import shutil
-from recommender import REPO_PATH
+from movie_recommender import REPO_PATH
 
 
 def parse_movies_links_and_genres(db):

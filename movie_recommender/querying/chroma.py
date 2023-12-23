@@ -1,5 +1,5 @@
-from recommender.querying.sql_models import Movie
-from recommender import REPO_PATH, CHROMA_PORT
+from movie_recommender.querying.sql_models import Movie
+from movie_recommender import REPO_PATH, CHROMA_PORT
 import chromadb
 import tqdm
 import math

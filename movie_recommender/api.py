@@ -1,5 +1,5 @@
 # api.app
-from recommender import (
+from movie_recommender import (
     REPO_PATH,
     MIN_SCORE,
     MAX_RECOMENDATIOSN,
@@ -11,25 +11,25 @@ from flask import render_template, request, jsonify
 from flask_user import login_required
 from flask_login import current_user
 from collections import namedtuple
-from recommender.querying.sql_models import (
+from movie_recommender.querying.sql_models import (
     Movie,
     Rating,
     User,
     Recommendation,
 )
-from recommender.init_data.fill_db import check_and_read_data
+from movie_recommender.init_data.fill_db import check_and_read_data
 from loguru import logger
-from recommender.querying.querying_and_validation import (
+from movie_recommender.querying.querying_and_validation import (
     validate_ratings,
     get_unique_genres,
     check_if_vadlid_ratings,
     validate_selected_genres,
 )
 
-from recommender.apps import create_app_slimm
-from recommender.querying import CHROMA_Manager
+from movie_recommender.apps import create_app_slimm
+from movie_recommender.querying import CHROMA_Manager
 from loguru import logger
-from recommender.python_queue import BackgroundTaskQueue
+from movie_recommender.python_queue import BackgroundTaskQueue
 from flask_user import UserManager
 from cachetools import TTLCache
 from dataclasses import dataclass
@@ -48,6 +48,9 @@ with open(REPO_PATH / "rating_movies.json") as f:
 
 
 EXAMPLE_MOVIES = Movie.query.filter(Movie.title.in_(rating_movies)).all()
+
+logger.info(f"We have so many {len(EXAMPLE_MOVIES)} rating movies")
+
 UNIQUE_GENRES = get_unique_genres(db)
 UNIQUE_GENRES_SET = set(UNIQUE_GENRES.values())
 
@@ -81,7 +84,7 @@ class MovieInfo:
     def __post_init__(self):
         path = f"images/{self.imdbid}.jpg"
 
-        if os.path.exists(REPO_PATH / "recommender/static/" / path):
+        if os.path.exists(REPO_PATH / "movie_recommender/static/" / path):
             self.image_path = path
 
 

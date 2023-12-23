@@ -1,7 +1,7 @@
 # apps.api
-from recommender import REPO_PATH
+from movie_recommender import REPO_PATH
 from flask import Flask
-from recommender.querying.sql_models import db, User
+from movie_recommender.querying.sql_models import db, User
 import os
 import celery
 from celery import Celery
@@ -16,9 +16,7 @@ class ConfigClass(object):
     SECRET_KEY = "This is an INSECURE secret!! DO NOT use this in production!!"
 
     # Flask-SQLAlchemy settings
-    SQLALCHEMY_DATABASE_URI = (
-        f"sqlite:///{REPO_PATH}/movie_recommender.sqlite"  # File-based SQL database
-    )
+    SQLALCHEMY_DATABASE_URI = f"sqlite:///{REPO_PATH}/instance/movie_recommender.sqlite"  # File-based SQL database
     SQLALCHEMY_TRACK_MODIFICATIONS = False  # Avoids SQLAlchemy warning
 
     # Flask-User settings

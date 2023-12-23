@@ -4,7 +4,7 @@ import threading
 import queue
 import sys
 from loguru import logger
-from recommender import REPO_PATH
+from movie_recommender import REPO_PATH
 from hashlib import sha256
 
 

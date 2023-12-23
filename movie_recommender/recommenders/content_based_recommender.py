@@ -1,5 +1,5 @@
 from typing import List, Tuple, Dict, Set
-from recommender.querying.sql_models import (
+from movie_recommender.querying.sql_models import (
     Movie,
     Actor,
     Director,
@@ -8,7 +8,7 @@ from recommender.querying.sql_models import (
 )  # Assuming models are in a file named models.py
 from collections import defaultdict
 from loguru import logger
-from recommender.querying.chroma import CHROMA_Manager
+from movie_recommender.querying.chroma import CHROMA_Manager
 
 
 class ContentBasedRecommender:

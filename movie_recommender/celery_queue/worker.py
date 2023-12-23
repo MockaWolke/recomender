@@ -1,11 +1,13 @@
 from loguru import logger
-from recommender.querying.sql_models import Rating, Recommendation, User
-from recommender.recommenders.content_based_recommender import ContentBasedRecommender
-from recommender.recommenders.user_based_recommender import UserBasedRecommender
+from movie_recommender.querying.sql_models import Rating, Recommendation, User
+from movie_recommender.recommenders.content_based_recommender import (
+    ContentBasedRecommender,
+)
+from movie_recommender.recommenders.user_based_recommender import UserBasedRecommender
 import time
-from recommender.apps import celery_app, db
+from movie_recommender.apps import celery_app, db
 from sqlalchemy.orm import scoped_session, sessionmaker
-from recommender import REPO_PATH
+from movie_recommender import REPO_PATH
 
 
 def specific_only(record):

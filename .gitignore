@@ -4,6 +4,7 @@ __pycache__/
 *$py.class
 chroma/
 recommender/static/images
+movie_recommender/static/images
 
 # C extensions
 *.so

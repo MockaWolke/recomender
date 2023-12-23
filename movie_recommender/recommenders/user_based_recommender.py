@@ -1,7 +1,7 @@
-from recommender.querying.sql_models import Movie, Rating, OldUser
+from movie_recommender.querying.sql_models import Movie, Rating, OldUser
 import numpy as np
 from collections import defaultdict
-from recommender.utils import normalize_score, l2
+from movie_recommender.utils import normalize_score, l2
 from typing import List, Set, Tuple, Dict
 
 

@@ -1,8 +1,8 @@
 from .content_based_recommender import ContentBasedRecommender
 from .user_based_recommender import UserBasedRecommender
-from recommender.utils import normalize_score, l2
+from movie_recommender.utils import normalize_score, l2
 from typing import List, Set, Dict, Tuple
-from recommender.querying.sql_models import Movie
+from movie_recommender.querying.sql_models import Movie
 from collections import defaultdict
 from loguru import logger
 import time

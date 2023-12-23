@@ -1,11 +1,11 @@
-from recommender.querying.sql_models import Rating, Recommendation, User
-from recommender.recommenders import CombinedRecommender
+from movie_recommender.querying.sql_models import Rating, Recommendation, User
+from movie_recommender.recommenders import CombinedRecommender
 import time
-from recommender import REPO_PATH
+from movie_recommender import REPO_PATH
 import sys
 from loguru import logger
 from flask_sqlalchemy import SQLAlchemy
-from recommender.apps import create_app_slimm
+from movie_recommender.apps import create_app_slimm
 
 logger.add(REPO_PATH / "backgroundjobs.log", rotation="3mb")
 
