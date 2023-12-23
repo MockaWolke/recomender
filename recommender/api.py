@@ -63,6 +63,8 @@ recommendations_cache = TTLCache(
     RECOMMENDATIONS_CACHED_N_USERS, RECOMMENDATIONS_CACHE_TIME
 )
 
+logger.info(f"Cache started {datetime.datetime.now()}")
+
 
 @dataclass
 class MovieInfo:
