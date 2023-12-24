@@ -21,18 +21,20 @@ class CHROMA_Manager:
         return cls._instance
 
     def __init__(self, batchsize=100) -> None:
-        try:
-            self.client = chromadb.HttpClient(port=CHROMA_PORT)
+        self.client = chromadb.PersistentClient(str(REPO_PATH / "chroma/"))
 
-        except (
-            ConnectionError,
-            ValueError,
-            ConnectionRefusedError,
-            ConnectionAbortedError,
-        ):
-            logger.error(
-                f"Found now chroma running on {CHROMA_PORT}. Just run 'bash start-chroma.sh'"
-            )
+        # try:
+        #     self.client = chromadb.HttpClient(port=CHROMA_PORT)
+
+        # except (
+        #     ConnectionError,
+        #     ValueError,
+        #     ConnectionRefusedError,
+        #     ConnectionAbortedError,
+        # ):
+        #     logger.error(
+        #         f"Found now chroma running on {CHROMA_PORT}. Just run 'bash start-chroma.sh'"
+        #     )
 
         self.collection = self.client.get_or_create_collection(
             "imdb", metadata={"hnsw:space": "cosine"}
