@@ -4,8 +4,11 @@ import threading
 import queue
 import sys
 from loguru import logger
-from movie_recommender import REPO_PATH
+from movie_recommender import REPO_PATH, BACKGROUND_PORT
+from requests import Timeout
 from hashlib import sha256
+import requests
+from movie_recommender.background_api.interface import BackgroundInterface
 
 
 class BackgroundTaskQueue:
@@ -50,26 +53,47 @@ class BackgroundTaskQueue:
             self.task_queue.task_done()
 
     def _process_task(self, job_id, user_id):
-        process = Popen(
-            [
-                sys.executable,
-                REPO_PATH / "movie_recommender/python_queue/job.py",
-                str(user_id),
-            ],
-            stdout=PIPE,
-            stderr=PIPE,
-        )
-
         try:
-            stdout, stderr = process.communicate(timeout=self.timeout)
-            if process.returncode != 0:
-                self.task_status[job_id] = "error"
+            if not BackgroundInterface.check_health(self.timeout):
+                raise Exception("The Helper Api is down")
 
-                logger.error(f"Background Process Failed for ID {user_id}: {stderr}")
+            success = BackgroundInterface.commit_job(user_id, self.timeout)
+            if not success:
+                self.task_status[job_id] = "error"
+                logger.error(f"Background Process Failed for ID {user_id}")
             else:
                 self.task_status[job_id] = "success"
                 logger.success(f"Background Process for ID {user_id}")
 
-        except TimeoutExpired:
+        except Timeout:
             self.task_status[job_id] = "error"
             logger.error(f"Timeout. Job for User {user_id} exceeded {self.timeout}s")
+
+        except Exception as e:
+            self.task_status[job_id] = "error"
+            logger.error(f"Error {e} for User {user_id}")
+
+    # def _process_task(self, job_id, user_id):
+    #     process = Popen(
+    #         [
+    #             sys.executable,
+    #             REPO_PATH / "movie_recommender/python_queue/job.py",
+    #             str(user_id),
+    #         ],
+    #         stdout=PIPE,
+    #         stderr=PIPE,
+    #     )
+
+    #     try:
+    #         stdout, stderr = process.communicate(timeout=self.timeout)
+    #         if process.returncode != 0:
+    #             self.task_status[job_id] = "error"
+
+    #             logger.error(f"Background Process Failed for ID {user_id}: {stderr}")
+    #         else:
+    #             self.task_status[job_id] = "success"
+    #             logger.success(f"Background Process for ID {user_id}")
+
+    #     except TimeoutExpired:
+    #         self.task_status[job_id] = "error"
+    #         logger.error(f"Timeout. Job for User {user_id} exceeded {self.timeout}s")

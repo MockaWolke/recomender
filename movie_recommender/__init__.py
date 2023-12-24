@@ -26,6 +26,10 @@ assert (
 ), "RECOMMENDATIONS_CACHE_TIME must be set in .env"
 RECOMMENDATIONS_CACHE_TIME = int(os.environ["RECOMMENDATIONS_CACHE_TIME"])
 
+assert "BACKGROUND_PORT" in os.environ, "BACKGROUND_PORT must be set in .env"
+BACKGROUND_PORT = int(os.environ["BACKGROUND_PORT"])
+
+
 MIN_RATING_LEN = 5
 MIN_SCORE = 0.2
 MAX_RECOMENDATIOSN = 20

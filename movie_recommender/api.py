@@ -30,6 +30,7 @@ from movie_recommender.apps import create_app_slimm
 from movie_recommender.querying import CHROMA_Manager
 from loguru import logger
 from movie_recommender.python_queue import BackgroundTaskQueue
+from movie_recommender.background_api.interface import BackgroundInterface
 from flask_user import UserManager
 from cachetools import TTLCache
 from dataclasses import dataclass
@@ -58,6 +59,8 @@ user_manager = UserManager(app, db, User)  # initialize Flask-User management
 chroma_manager = CHROMA_Manager.get_instance()
 BackgroundTaskQueue.get_instance(timeout=Back_Ground_Timeout)
 assert BackgroundTaskQueue.get_instance().timeout == Back_Ground_Timeout
+
+assert BackgroundInterface.start_background_api(30, 2), "Could not start background api"
 
 logger.info(f"Starting API at {datetime.datetime.now()}")
 
