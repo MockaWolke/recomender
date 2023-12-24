@@ -5,12 +5,17 @@ import requests
 import time
 from loguru import logger
 from subprocess import Popen
+import sys
 
 
 class BackgroundInterface:
     @staticmethod
     def start_background_api(waiting=10, timeout=2) -> bool:
+        logger.debug("The python executable {sys.executable}")
+
         cmd = [
+            sys.executable,
+            "-m",
             "uvicorn",
             "api:background_api",
             "--host",
