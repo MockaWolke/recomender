@@ -73,6 +73,6 @@ class BackgroundInterface:
         )
 
         response.raise_for_status()  # Raise an HTTPError for bad requests
-        logger.debug(f"received respone {response.json()}")
+        logger.debug(f"received respone {response}")
 
         return response.json()
