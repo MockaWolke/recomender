@@ -18,10 +18,10 @@ background_api = FastAPI()
 logger.add(REPO_PATH / "backgroundjobs.log", rotation="3mb", level="DEBUG")
 
 logger.info(f"Starting Background Api at {datetime.datetime.now()}")
-logger.add("some debug bessame")
+logger.debug("some debug bessame")
 
 app, db = create_app_slimm()
-logger.add("another")
+logger.debug("another")
 
 
 def generate_recommendations(db, user_id):
