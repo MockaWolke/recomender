@@ -23,6 +23,8 @@ app, db = create_app_slimm()
 
 
 def generate_recommendations(db, user_id):
+    logger.debug(f"Received Job for user {user_id}")
+
     try:
         user = db.session.query(User).get(user_id)
         if user is None:
@@ -45,8 +47,12 @@ def generate_recommendations(db, user_id):
         movies, ratings = zip(*[(r.movie, r.value) for r in ratings])
         ratings = [(val - 3) ** 3 for val in ratings]
 
+        logger.debug("Start recommender")
+
         recommender = CombinedRecommender(db)
         recommendations, scores = recommender.find_most_simmilar(movies, ratings)
+
+        logger.debug("Start computed recommendations")
 
         for movie, score in zip(recommendations, scores):
             new_recommendation = Recommendation(
@@ -61,6 +67,7 @@ def generate_recommendations(db, user_id):
         return True
     except Exception as e:
         message = f"Error generating recommendations: {e}"
+        logger.error(message)
         logger.exception(message)
         db.session.close()
 
