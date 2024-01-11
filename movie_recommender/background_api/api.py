@@ -98,9 +98,13 @@ def get_health() -> HealthCheck:
     Returns:
         HealthCheck: Returns a JSON response with the health status
     """
+    logger.debug("received health request")
+
     return HealthCheck(status="OK")
 
 
 @background_api.post("/calculate_recommendations/")
 def api_fix_spelling(user_id: int) -> bool:
+    logger.debug(f"received job for user {user_id}")
+
     return generate_recommendations(db, user_id)
