@@ -61,7 +61,7 @@ def generate_recommendations(db, user_id):
         return True
     except Exception as e:
         message = f"Error generating recommendations: {e}"
-        logger.error(message)
+        logger.exception(message)
         db.session.close()
 
     return False
