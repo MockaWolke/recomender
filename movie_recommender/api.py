@@ -6,6 +6,7 @@ from movie_recommender import (
     Back_Ground_Timeout,
     RECOMMENDATIONS_CACHE_TIME,
     RECOMMENDATIONS_CACHED_N_USERS,
+    BACKGROUND_PORT,
 )
 from flask import render_template, request, jsonify
 from flask_user import login_required
@@ -60,9 +61,15 @@ chroma_manager = CHROMA_Manager.get_instance()
 BackgroundTaskQueue.get_instance(timeout=Back_Ground_Timeout)
 assert BackgroundTaskQueue.get_instance().timeout == Back_Ground_Timeout
 
-assert BackgroundInterface.start_background_api(30, 2), "Could not start background api"
-
 logger.info(f"Starting API at {datetime.datetime.now()}")
+
+if BackgroundInterface.check_health(5):
+    logger.info("background api already started")
+else:
+    logger.info(f"Trying to start Background API at port {BACKGROUND_PORT}")
+    assert BackgroundInterface.start_background_api(
+        30, 2
+    ), "Could not start background api"
 
 
 recommendations_cache = TTLCache(
