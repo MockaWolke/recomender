@@ -96,7 +96,7 @@ class BackgroundInterface:
 
             raise Exception("The Api was not succesfully started")
 
-        except Exception, ValueError as e:
+        except Exception as e:
             logger.error(f"Failed to start background API: {e}")
             return False
 
