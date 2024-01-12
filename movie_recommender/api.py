@@ -63,7 +63,9 @@ assert BackgroundTaskQueue.get_instance().timeout == Back_Ground_Timeout
 
 logger.info(f"Starting API at {datetime.datetime.now()}")
 
-if BackgroundInterface.check_health(5):
+ACCEPT_BACK_API = False
+
+if BackgroundInterface.check_health(5) and ACCEPT_BACK_API:
     logger.info("background api already started")
 else:
     logger.info(f"Trying to start Background API at port {BACKGROUND_PORT}")
