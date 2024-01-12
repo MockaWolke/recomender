@@ -4,13 +4,57 @@ from hashlib import sha256
 import requests
 import time
 from loguru import logger
-from subprocess import Popen
+from subprocess import Popen, PIPE
+import threading
+import queue
 import sys
+import socket
+
+
+def is_port_available(port) -> bool:
+    """Check wether port is Avalibale"""
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        try:
+            s.bind(("0.0.0.0", port))
+            return True
+        except OSError:
+            return False
+
+
+def enqueue_output(out, queue):
+    for line in iter(out.readline, b""):
+        queue.put(line)
+    out.close()
+
+
+def get_stderr_text(process: Popen, wait_time: int) -> str:
+    stderr_queue = queue.Queue()
+
+    # Start threads to populate queues
+    stderr_thread = threading.Thread(
+        target=enqueue_output, args=(process.stderr, stderr_queue)
+    )
+    stderr_thread.daemon = True
+    stderr_thread.start()
+
+    time.sleep(wait_time)
+
+    stderr_output = []
+
+    while not stderr_queue.empty():
+        stderr_output.append(stderr_queue.get_nowait())
+
+    return "".join(stderr_output)
 
 
 class BackgroundInterface:
     @staticmethod
     def start_background_api(waiting=10, timeout=2) -> bool:
+        if not is_port_available(BACKGROUND_PORT):
+            raise ValueError(
+                f"The BACKGROUND_PORT {BACKGROUND_PORT} is not free, choose another in the .env!"
+            )
+
         logger.debug(f"The python executable {sys.executable}")
 
         cmd = [
@@ -27,9 +71,11 @@ class BackgroundInterface:
         cmd = [str(i) for i in cmd]
 
         try:
-            api = Popen(
+            process = Popen(
                 cmd,
                 cwd=str(REPO_PATH / "movie_recommender/background_api/"),
+                stderr=PIPE,
+                text=True,
             )
 
             start = time.time()
@@ -37,7 +83,12 @@ class BackgroundInterface:
             while time.time() - start < waiting:
                 try:
                     if BackgroundInterface.check_health(timeout):
-                        return True
+                        std_err_output = get_stderr_text(process, 1)
+                        logger.debug(
+                            f"The Uvicorn startup outputs: \n {std_err_output}"
+                        )
+
+                        return "Uvicorn running on" in std_err_output
                 except:
                     pass
                 time.sleep(0.25)
