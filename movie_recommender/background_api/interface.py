@@ -50,10 +50,13 @@ def get_stderr_text(process: Popen, wait_time: int) -> str:
 class BackgroundInterface:
     @staticmethod
     def start_background_api(waiting=10, timeout=2) -> bool:
-        if not is_port_available(BACKGROUND_PORT):
-            raise ValueError(
-                f"The BACKGROUND_PORT {BACKGROUND_PORT} is not free, choose another in the .env!"
-            )
+        # if not is_port_available(BACKGROUND_PORT):
+        #     raise ValueError(
+        #         f"The BACKGROUND_PORT {BACKGROUND_PORT} is not free, choose another in the .env!"
+        #     )
+
+        if BackgroundInterface.check_health(2):
+            raise ValueError(f"Already an API at port {BACKGROUND_PORT}")
 
         logger.debug(f"The python executable {sys.executable}")
 
