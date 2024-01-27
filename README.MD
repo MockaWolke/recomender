@@ -39,7 +39,7 @@ Collaborative filtering is used to find users who have similar tastes and prefer
 
 Content-based filtering is used to recommend movies based on their genres, actors, directors, and plot summaries. This information was crawled from imdb and saved in the database. The recommender identifies movies that have similar attributes or content to the movies that the user has rated highly and recommends those movies.
 
-The optimized the influence of genres, authors, plot descriptions and similar users, such that the recommender system follows our taste. You can see more [here.](notebooks/optimize_weights.ipynb)
+We optimized the influence of genres, authors, plot descriptions and similar users using optuna, such that the recommender system follows our taste. You can see more [here.](notebooks/optimize_weights.ipynb)
 
 ### Genre Filter
 
